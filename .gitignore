@@ -109,6 +109,10 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+bin/
+lib/
+share/
+lib64/
 
 # Spyder project settings
 .spyderproject
@@ -127,3 +131,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Files containing passwords
+broker.sh
+
