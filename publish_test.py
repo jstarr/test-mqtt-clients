@@ -20,10 +20,10 @@ import sys, getopt, os
 
 def helpMsg():
     msg = '''
-    subscribe_test.py
-    This python script can be used to test mqtt broker's subscribe function.
+    publish_test.py
+    This python script can be used to test mqtt broker's publish function.
     Usage:
-        python3 subscribe_test.py <options>
+        python3 publish_test.py <options>
 
         Options:
         -b, --broker: The address on the network for the broker (default:localhost)
@@ -53,7 +53,7 @@ def toIntwDefault(val, default):
 def getAppOptions(argv):
     mName = os.environ.get('MQTTNAME')
     broker = ('localhost', mName)[mName == None]
-    cn = "Test_Subscriber"
+    cn = "Test_publishr"
     msg = 'This is just a test #'
     port = 1883
     psw = os.environ.get('PSWVAL')
