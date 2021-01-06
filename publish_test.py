@@ -27,7 +27,7 @@ def helpMsg():
 
         Options:
         -b, --broker: The address on the network for the broker (default:localhost)
-        -c, --client: Name to use for this client.  (default: Test_Scriber)
+        -c, --client: Name to use for this client.  (default: Test_publisher)
         -h, --help: Displays this message.
         -m, --message: The payload for publisher.  Not used here (default:None)
         -p, --password: The password to use for the broker. (default: None)
@@ -53,7 +53,7 @@ def toIntwDefault(val, default):
 def getAppOptions(argv):
     mName = os.environ.get('MQTTNAME')
     broker = ('localhost', mName)[mName == None]
-    cn = "Test_Subscriber"
+    cn = "Test_publisher"
     msg = 'This is just a test #'
     port = 1883
     psw = os.environ.get('PSWVAL')
@@ -113,6 +113,15 @@ def on_connect(client, userdata, flags, rc):
     '''
     print(f"Connected {__file__} with result code {rc}")
 
+def on_publish(client, userdata, mid):
+    '''Called when a message that was to be sent using the publish() call has completed transmission to the broker. For messages with QoS levels 1 and 2, this means that the appropriate handshakes have completed. For QoS 0, this simply means that the message has left the client. The mid variable matches the mid variable returned from the corresponding publish() call, to allow outgoing messages to be tracked.
+This callback is important because even if the publish() call returns success, it does not always mean that the message has been sent.
+    '''
+    if client.rc == mqtt.MQTT_ERR_SUCCESS:
+        print('Message sent...')
+    else:
+        pring(f'Error # {client.rc}') 
+
 def on_disconnect(client, userdata, rc):
     '''Callback function called when the client sends a disconnect.
     Simply prints a disconnect message
@@ -122,6 +131,8 @@ def on_disconnect(client, userdata, rc):
 def main(argv):
     run = True
     broker, cn, msg, psw, port, qos, retain, topic, userName = getAppOptions(argv)
+    print(f'Broker: {broker}\nClient Name: {cn}\nMessage: {msg}')
+    print(f'QOS: {qos}\nRetain:{retain}\nTopic:{topic}\nUser Name: {userName}')
     counter = 1
     ourClient = mqtt.Client(cn)
     ourClient.username_pw_set(userName, psw)
