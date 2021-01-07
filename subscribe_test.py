@@ -44,6 +44,7 @@ This implementation simply answers 'Done' and exits with a 0'''
     
     print('Done')
     sys.exit(0)
+
 def getAppOptions(argv):
     mName = os.environ.get('MQTTNAME')
     broker = ('localhost', mName)[mName == None]
@@ -121,14 +122,17 @@ def on_message(client, userdata, message):
     '''
 
     global messagesReceived
-    print('A message was received')
-    mDict = assembleMessage(client, userdata, message)
-    print(f'The Message: {mDict}')
-    client.loop_stop()
-    print('Stopped client')
-    client.disconnect()
-    print('Disconnected')
     messagesReceived += 1
+    print(f'Message #{messagesReceived} was received')
+    mDict = assembleMessage(client, userdata, message)
+    print(f'\tThe Message Received:')
+    for key, value in mDict.items():
+        print(f'\t{key}: {value}')
+    print()
+    # client.loop_stop()
+    # print('Stopped client')
+    # client.disconnect()
+    # print('Disconnected')
 
 def on_connect(client, topic, flags, rc):
     '''Callback function called when the client connects.
@@ -137,14 +141,12 @@ def on_connect(client, topic, flags, rc):
 
     global msgAttempts
     if msgAttempts == 0:
-        print(f'Subscribing to topic:{topic}')
+        print(f'Subscribing to topic:{topic} with flags:{flags}')
         fields = (
-            "_clean_session",
             "_client_id",
             "_username",
             "_password",
             "_will_topic",
-            "_will_payload",
             "_will_qos",
             "_will_retain",
             "_host",
@@ -154,9 +156,13 @@ def on_connect(client, topic, flags, rc):
             "_tls_insecure"
         )
         print('Client Data:')
-        for key in client.__dict__:
+        for key, value in client.__dict__.items():
             if key in fields:
-                print(f'Var: {key}\tValue:{client.__dict__[key]}')
+                if len(key) <= 10:
+                    tabs = '\t\t'
+                else:
+                    tabs = '\t'
+                print(f'Var: {key}{tabs}Value:{value}')
         msgAttempts += 1
     now = datetime.datetime.now()
     fnow = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -175,6 +181,7 @@ def main(argv):
     global messagesReceived
     # Handler for ctrl-c press
     signal.signal(signal.SIGINT, signal_handler)
+
     broker, cn, msg, psw, qos, retain, topic, userName, waitTime = getAppOptions(argv)
     print(f'broker:{broker}\ncn:{cn}\nmsg:{msg}\npsw:{psw}\nqos:{qos}\nretain:{retain}\ntopic:{topic}\nuserName:{userName}\nwaitTime:{waitTime}\n')
 
@@ -190,15 +197,18 @@ def main(argv):
 
     ourClient.loop_start()    # Blocking call to process network traffic
 
-
+    nloop = 0
     while(True):
-        if messagesReceived == 0:
-            now = datetime.datetime.now()
-            fNow = now.strftime("%Y-%m-%d %H:%M:%S")
-            print(f'Waiting... {fNow}')
-            time.sleep(waitTime)
-        else:
-            sys.exit(0)
+        # now = datetime.datetime.now()
+        # fNow = now.strftime("%Y-%m-%d %H:%M:%S")
+        # print(f'Waiting... {fNow}')
+        # print('.', end = '')
+        nloop += 1
+        sys.stdout.write('.')
+        if nloop == 60:
+            sys.stdout.write('\n')
+        sys.stdout.flush()
+        time.sleep(waitTime)
         
 if __name__ == "__main__":
     main(sys.argv[1:])

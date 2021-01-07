@@ -17,6 +17,7 @@ Usage:
 '''
 import paho.mqtt.client as mqtt
 import sys, getopt, os
+import signal
 
 def helpMsg():
     msg = '''
@@ -38,7 +39,6 @@ def helpMsg():
                       Valid values: True or False
         -t, --topic: Topic to monitor (default: Test)
         -u, --username: User name for the broker (default: None)
-        -w, --wait-time: Times between loop (default: 1 sesc)
     '''
     return msg
 
@@ -49,6 +49,13 @@ def toIntwDefault(val, default):
         y = default
 
     return y
+
+def signal_handler(sig, frame):
+    '''Handler to handle when user presses ctrl-c
+This implementation simply answers 'Done' and exits with a 0'''
+    
+    print('Done')
+    sys.exit(0)
 
 def getAppOptions(argv):
     mName = os.environ.get('MQTTNAME')
@@ -69,12 +76,11 @@ def getAppOptions(argv):
         opts, args = getopt.getopt(argv, "b:c:hm:o:p:q:r:t:u:", 
                      ["broker=", "client=", "help", "message=", "password=",
                      "port=", "qos=", "retail=", "topic=", "username="])
-    except getopt.GetoptError:
+    except getopt.GetoptError as err:
         helpmsg = helpMsg()
-        print (helpmsg)
+        print (f'Command Line Error {err} Occured\n{helpmsg}')
         sys.exit(2)
     
-    print(f'options:\n{opts}')
     for opt, arg in opts:
         if opt in ("-b", "--broker"):
             broker = arg
@@ -129,6 +135,9 @@ def on_disconnect(client, userdata, rc):
     print(f'Disconnected: {rc}')
 
 def main(argv):
+    # Handler for ctrl-c press
+    signal.signal(signal.SIGINT, signal_handler)
+    
     run = True
     broker, cn, msg, psw, port, qos, retain, topic, userName = getAppOptions(argv)
     print(f'Broker: {broker}\nClient Name: {cn}\nMessage: {msg}')
