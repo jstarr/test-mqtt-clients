@@ -129,6 +129,6 @@ dmypy.json
 .pyre/
 
 # This project
-broker.sh
+env_setter.sh
 .vscode/
 

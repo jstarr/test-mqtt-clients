@@ -7,96 +7,23 @@ This was created with much help from https://www.digikey.com/en/maker/blogs/2019
 import paho.mqtt.client as mqtt
 import datetime
 import time
-import sys, getopt, os
+import sys
+import getopt
+import argh
+import os
 import signal
 
 
 msgAttempts = 0
 messagesReceived = 0
 
-def helpMsg():
-    msg = '''
-    subscribe_test.py
-    This python script can be used to test mqtt broker's subscribe function.
-    Usage:
-        python3 subscribe_test.py <options>
-
-        Options:
-        -b, --broker: The address on the network for the broker (default:localhost)
-        -c, --client: Name to use for this client.  (default: Test_Scriber)
-        -h, --help: Displays this message.
-        -m, --message: The payload for publisher.  Not used here (default:None)
-        -p, --password: The password to use for the broker. (default: None)
-        -q, --qos: The quality of service (0, 1, 2) (default:0)
-        -r, --retain: if set to True, the will message will be set as the 
-                      "last known good"/retained message for the topic.
-                      Valid values: True or False
-        -t, --topic: Topic to monitor (default: Test)
-        -u, --username: User name for the broker (default: None)
-        -w, --wait-time: Times between loop (default: 1 sesc)
-    '''
-    return msg
-
 
 def signal_handler(sig, frame):
     '''Handler to handle when user presses ctrl-c
 This implementation simply answers 'Done' and exits with a 0'''
-    
+
     print('Done')
     sys.exit(0)
-
-def getAppOptions(argv):
-    mName = os.environ.get('MQTTNAME')
-    broker = ('localhost', mName)[mName == None]
-    cn = "Test_Subscriber"
-    msg = None
-    psw = os.environ.get('PSWVAL')
-    qos = 0
-    retain = False
-    topic = 'Test'
-    userName = os.environ.get('USERNAME')
-    waitTime = 1
-    
-    if len(argv) == 0:
-        return (broker, cn, msg, psw, qos, retain, topic, userName, waitTime)
-    
-    try:
-        opts, args = getopt.getopt(argv, "b:c:hm:p:q:r:t:u:w:", 
-                     ["broker=", "client=", "help", "message=", "password=",
-                     "qos=", "retail=", "topic=", "username=", "wait-time="])
-    except getopt.GetoptError:
-        helpmsg = helpMsg()
-        print (helpmsg)
-        sys.exit(2)
-    
-    print(f'options:\n{opts}')
-    for opt, arg in opts:
-        if opt in ("-b", "--broker"):
-            broker = arg
-        elif opt in ("-c", "--client"):
-            cn = arg
-        elif opt in ("-h", "--help"):
-            helpmsg = helpMsg()
-            print(helpmsg)
-            sys.exit()
-        elif opt in ("-m", "--message"):
-            msg = arg
-        elif opt in ("-p", "--pasword"):
-            psw = arg
-        elif opt in ("-q", "--qos"):
-            qos = int(arg)
-        elif opt in ("-r", "--retail"):
-            retain = bool(arg)
-        elif opt in ("-t", "--topic"):
-            topic = arg
-        elif opt in ("-u", "--username"):
-            userName = arg
-        elif opt in ("-w", "--wait-time"):
-            print(f'Wait Time in the command line: {arg}')
-            waitTime = float(arg)
-            
-    return (broker, cn, msg, psw, qos, retain, topic, userName, waitTime )
-    
 
 
 def assembleMessage(client, userdata, message):
@@ -113,8 +40,9 @@ def assembleMessage(client, userdata, message):
     message = str(message.payload.decode('utf-8'))
     now = datetime.datetime.now()
     fnow = now.strftime("%Y-%m-%d %H:%M:%S")
-    return {'time': fnow, 'topic': topic, 'message':message}
-    
+    return {'time': fnow, 'topic': topic, 'message': message}
+
+
 def on_message(client, userdata, message):
     '''
     Message callback function
@@ -133,6 +61,7 @@ def on_message(client, userdata, message):
     # print('Stopped client')
     # client.disconnect()
     # print('Disconnected')
+
 
 def on_connect(client, topic, flags, rc):
     '''Callback function called when the client connects.
@@ -169,6 +98,7 @@ def on_connect(client, topic, flags, rc):
     print(f"Connected {__file__} with result code {rc} at {fnow}")
     client.subscribe(topic)
 
+
 def on_disconnect(client, userdata, rc):
     '''Callback function called when the client sends a disconnect.
     Simply prints a disconnect message
@@ -177,18 +107,33 @@ def on_disconnect(client, userdata, rc):
     fnow = now.strftime("%Y-%m-%d %H:%M:%S")
     print(f'Disconnected: {rc} at {fnow}')
 
-def main(argv):
+
+def main(broker: 'The name of the MQTT broker server' = None,
+         cn: 'The name of the subscriber' = "Test_Subscriber",
+         msg: 'You may ignore this for subscribe_test.py' = None,
+         psw: 'Broker user name' = None,
+         qos: 'The quality of service level to use' = 0,
+         retain: 'True, will message set  "last known good message".' = False,
+         topic: 'The topic we will listen for' = 'Test',
+         userName: "Set a username for broker authentication" = None,
+         waitTime=1):
+
+    #   Actual defaults that come from the environment
+    broker = broker if broker else os.environ.get('MQTTNAME')
+    psw = psw if psw else os.environ.get('PSWVAL')
+    userName = userName if userName else os.environ.get('USERNAME')
+
     global messagesReceived
     # Handler for ctrl-c press
     signal.signal(signal.SIGINT, signal_handler)
 
-    broker, cn, msg, psw, qos, retain, topic, userName, waitTime = getAppOptions(argv)
-    print(f'broker:{broker}\ncn:{cn}\nmsg:{msg}\npsw:{psw}\nqos:{qos}\nretain:{retain}\ntopic:{topic}\nuserName:{userName}\nwaitTime:{waitTime}\n')
+    print(f'broker:{broker}\ncn:{cn}\nmsg:{msg}\npsw:{psw}\n',
+          f'qos:{qos}\nretain:{retain}\ntopic:{topic}\nuserName:{userName}\n',
+          f'waitTime:{waitTime}\n')
 
     ourClient = mqtt.Client(client_id=cn, userdata=topic)
     ourClient.username_pw_set(userName, psw)
     ourClient.will_set(topic, payload=msg, qos=qos, retain=retain)
-    # ourClient.user_data_set(cn)
     ourClient.on_connect = on_connect
     ourClient.on_disconnect = on_disconnect
     ourClient.on_message = on_message
@@ -199,17 +144,13 @@ def main(argv):
 
     nloop = 0
     while(True):
-        # now = datetime.datetime.now()
-        # fNow = now.strftime("%Y-%m-%d %H:%M:%S")
-        # print(f'Waiting... {fNow}')
-        # print('.', end = '')
         nloop += 1
         sys.stdout.write('.')
         if nloop == 60:
             sys.stdout.write('\n')
         sys.stdout.flush()
         time.sleep(waitTime)
-        
+
+
 if __name__ == "__main__":
-    main(sys.argv[1:])
-    
+    argh.dispatch_command(main)

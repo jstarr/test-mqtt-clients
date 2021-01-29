@@ -34,7 +34,7 @@ def helpMsg():
         -p, --password: The password to use for the broker. (default: None)
         -o, --poer: The port number of the broker
         -q, --qos: The quality of service (0, 1, 2) (default:0)
-        -r, --retain: if set to True, the will message will be set as the 
+        -r, --retain: if set to True, the will message will be set as the
                       "last known good"/retained message for the topic.
                       Valid values: True or False
         -t, --topic: Topic to monitor (default: Test)
@@ -53,7 +53,7 @@ def toIntwDefault(val, default):
 def signal_handler(sig, frame):
     '''Handler to handle when user presses ctrl-c
 This implementation simply answers 'Done' and exits with a 0'''
-    
+
     print('Done')
     sys.exit(0)
 
@@ -68,19 +68,19 @@ def getAppOptions(argv):
     retain = False
     topic = 'Test'
     userName = os.environ.get('USERNAME')
-    
+
     if len(argv) == 0:
         return (broker, cn, msg, psw, port, qos, retain, topic, userName)
-    
+
     try:
-        opts, args = getopt.getopt(argv, "b:c:hm:o:p:q:r:t:u:", 
+        opts, args = getopt.getopt(argv, "b:c:hm:o:p:q:r:t:u:",
                      ["broker=", "client=", "help", "message=", "password=",
                      "port=", "qos=", "retail=", "topic=", "username="])
     except getopt.GetoptError as err:
         helpmsg = helpMsg()
         print (f'Command Line Error {err} Occured\n{helpmsg}')
         sys.exit(2)
-    
+
     for opt, arg in opts:
         if opt in ("-b", "--broker"):
             broker = arg
@@ -105,7 +105,7 @@ def getAppOptions(argv):
             topic = arg
         elif opt in ("-u", "--username"):
             userName = arg
-            
+
     return (broker, cn, msg, psw, port, qos, retain, topic, userName)
 
 def messageFunction(client, userdata, message):
@@ -126,7 +126,7 @@ This callback is important because even if the publish() call returns success, i
     if client.rc == mqtt.MQTT_ERR_SUCCESS:
         print('Message sent...')
     else:
-        pring(f'Error # {client.rc}') 
+        pring(f'Error # {client.rc}')
 
 def on_disconnect(client, userdata, rc):
     '''Callback function called when the client sends a disconnect.
@@ -137,7 +137,7 @@ def on_disconnect(client, userdata, rc):
 def main(argv):
     # Handler for ctrl-c press
     signal.signal(signal.SIGINT, signal_handler)
-    
+
     run = True
     broker, cn, msg, psw, port, qos, retain, topic, userName = getAppOptions(argv)
     print(f'Broker: {broker}\nClient Name: {cn}\nMessage: {msg}')
@@ -156,9 +156,8 @@ def main(argv):
         print(f'{mqttMsg}')
         run = toIntwDefault(input(f"MQTTMessageInfo: {counter}> "), 0)
         counter += 1
-        
+
     print('Complete')
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-    
