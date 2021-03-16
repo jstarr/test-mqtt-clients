@@ -1,8 +1,16 @@
 #!/home/pi/GitHub/test-mqtt-clients/env/bin/python
 '''
 Create a python client to test SUBSCRIBING to an MQTT publisher
-This was created with much help from
+
+This was created with much help from:
 https://www.digikey.com/en/maker/blogs/2019/how-to-use-mqtt-with-the-raspberry-pi
+
+NOTE: For argh, a small library abstracting argpars, I used the tutorial found
+at: https://argh.readthedocs.io/en/latest/tutorial.html
+
+NOTE 2: To properly end this program use ctrl-c.  To make this work I used the
+information in the stackoverflow question found at:
+https://stackoverflow.com/questions/73663/how-to-terminate-a-python-script
 
 '''
 import signal
