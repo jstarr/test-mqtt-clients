@@ -1,6 +1,8 @@
 '''Assistant for publish_test.py and subscribe.py.
 These 2 apps have a number of common features.  I have put them in here
 to simplify things.
+NOTE: Used the information from Eclipse Paho Documentation,
+https://www.eclipse.org/paho/index.php?page=clients/python/docs/index.php#id2
 '''
 from mqttConnectError import MQTTConnectionError
 import paho.mqtt.client as mqtt
