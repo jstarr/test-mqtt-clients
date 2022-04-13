@@ -25,6 +25,8 @@ def on_connect(client, topic, flags, rc, fnow):
     '''Simply subscribe to our topic
     '''
 
+    # print(f'Connection Response: {rc}')
+
     #   We subscribe to the topic in this on_connect function
     client.subscribe(topic.strip())
 
@@ -40,6 +42,8 @@ def main(broker: 'The name of the MQTT broker server' = None,
          userName: 'Set a username for broker authentication' = None,
          waitTime: 'Time between printing a "."' = 1):
 
+    print(f'\nDEBUG [{Psw}]')
+
     #   ClientWork is where most of the real work is performed.
     clientWorker = Mqtt_Assistant(__file__, broker, cn, msg, port, Psw, qos,
                                   retain, topic, userName)
@@ -51,14 +55,14 @@ def main(broker: 'The name of the MQTT broker server' = None,
     clientWorker.loop()
     try:
 
-        nloop = 0
+        clientWorker.nLoop = 0
         while(True):
             if waitTime:
-                nloop += 1
+                clientWorker.nLoop += 1
                 sys.stdout.write('.')
-                if nloop == 60:
+                if clientWorker.nLoop == 60:
                     sys.stdout.write('\n')
-                    nloop = 0
+                    clientWorker.nLoop = 0
                 sys.stdout.flush()
             time.sleep(waitTime)
     except MQTTConnectionError:

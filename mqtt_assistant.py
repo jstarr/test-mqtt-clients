@@ -9,6 +9,7 @@ import paho.mqtt.client as mqtt
 import datetime
 import sys
 import os
+import inspect
 
 
 class Mqtt_Assistant():
@@ -42,6 +43,9 @@ class Mqtt_Assistant():
         self.userName = userName
         self.ourClient = ourClient
         self.isNotConnected = True
+        self.nLoop = 0
+
+        print(inspect.stack()[0][3])
 
         # Set up the client for runing
         self.ourClient.username_pw_set(self.userName, self.psw)
@@ -212,6 +216,7 @@ class Mqtt_Assistant():
         Simply prints a connection confirmation message.
         '''
 
+        # print(inspect.stack()[0][3])
         if rc:
             raise MQTTConnectionError(rc)
 
@@ -232,7 +237,8 @@ class Mqtt_Assistant():
         Simply prints a disconnect message
         '''
         fnow = self.timeStamp()
-        print(f'\nDisconnected: {rc} at {fnow}')
+        # print(f'\nDisconnected: {rc} at {fnow}')
+        sys.stdout.write('x')
 
         self._out_disconnect(client, userdata, rc)
 
@@ -255,6 +261,7 @@ class Mqtt_Assistant():
         mDict = self.assembleMessage(client, userdata, message)
         self._out_message(client, userdata, self._messagesReceivedCounter,
                           self._messagesReceivedCounter, mDict)
+        self.nLoop = 0
 
     @staticmethod
     def _out_message(client, userdata, message, messagesReceivedCounter=None,
@@ -343,18 +350,21 @@ class Mqtt_Assistant():
 
     def connect_async(self):
         '''Connect to the broker'''
+        print(inspect.stack()[0][3])
         self.displayInit()
         self._ourClient.connect_async(self.broker, self.port)
         self.isNotConnected = False
 
     def connect(self):
         '''Connect to the broker'''
+        print(inspect.stack()[0][3])
         self.displayInit()
         self._ourClient.connect(self.broker, self.port)
         self.isNotConnected = False
 
     def loop(self):
         '''Make it all work'''
+        print(inspect.stack()[0][3])
         if self.isNotConnected:
             self.connect_async()
         """Calling loop_start() once, before or after connect*(), runs a thread in
